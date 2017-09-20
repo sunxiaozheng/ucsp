@@ -1,95 +1,47 @@
-<!doctype html>
-<html lang="{{ app()->getLocale() }}">
+<!DOCTYPE html>
+<html>
     <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-
-        <title>Laravel</title>
-
-        <!-- Fonts -->
-        <link href="https://fonts.googleapis.com/css?family=Raleway:100,600" rel="stylesheet" type="text/css">
-
-        <!-- Styles -->
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> 
+        <meta http-equiv="Pragma" content="no-cache"> 
+        <meta http-equiv="Cache-Control" content="no-cache"> 
+        <meta http-equiv="Expires" content="0"> 
+        <title>排课系统-管理登录</title> 
+        <link href="{{ asset('css/backend/login.css') }}" type="text/css" rel="stylesheet"> 
         <style>
-            html, body {
-                background-color: #fff;
-                color: #636b6f;
-                font-family: 'Raleway', sans-serif;
-                font-weight: 100;
-                height: 100vh;
-                margin: 0;
+            #capt {
+                width: 100%;
             }
-
-            .full-height {
-                height: 100vh;
+            input.captcha {
+                float:left;
+                width: 55%;
             }
-
-            .flex-center {
-                align-items: center;
-                display: flex;
-                justify-content: center;
-            }
-
-            .position-ref {
-                position: relative;
-            }
-
-            .top-right {
-                position: absolute;
-                right: 10px;
-                top: 18px;
-            }
-
-            .content {
-                text-align: center;
-            }
-
-            .title {
-                font-size: 84px;
-            }
-
-            .links > a {
-                color: #636b6f;
-                padding: 0 25px;
-                font-size: 12px;
-                font-weight: 600;
-                letter-spacing: .1rem;
-                text-decoration: none;
-                text-transform: uppercase;
-            }
-
-            .m-b-md {
-                margin-bottom: 30px;
+            img {
+                float: right;
+                height: 50px;
+                width: 40%;
             }
         </style>
-    </head>
+    </head> 
     <body>
-        <div class="flex-center position-ref full-height">
-            @if (Route::has('login'))
-                <div class="top-right links">
-                    @auth
-                        <a href="{{ url('/home') }}">Home</a>
-                    @else
-                        <a href="{{ route('login') }}">Login</a>
-                        <a href="{{ route('register') }}">Register</a>
-                    @endauth
+        <div class="login">
+            <div class="message">排课系统-管理登录</div>
+            <div id="darkbannerwrap"></div>
+            <form method="post" action="">
+                <input name="action" value="login" type="hidden">
+                <input name="username" placeholder="用户名" required="" type="text">
+                <hr class="hr15">
+                <input name="password" placeholder="密码" required="" type="password">
+                <hr class="hr15">
+                <div id="capt">
+                    <input name="captcha" class="captcha" placeholder="验证码" required="" type="text">
+                    <img src="{{ $captcha }}" />
                 </div>
-            @endif
-
-            <div class="content">
-                <div class="title m-b-md">
-                    Laravel
-                </div>
-
-                <div class="links">
-                    <a href="https://laravel.com/docs">Documentation</a>
-                    <a href="https://laracasts.com">Laracasts</a>
-                    <a href="https://laravel-news.com">News</a>
-                    <a href="https://forge.laravel.com">Forge</a>
-                    <a href="https://github.com/laravel/laravel">GitHub</a>
-                </div>
-            </div>
+                <hr class="hr15">
+                <input value="登录" style="width:100%;" type="submit">
+                <hr class="hr20">
+                帮助 <a onClick="alert('请联系管理员')">忘记密码</a>
+            </form>
         </div>
+        <div class="copyright">© 2016品牌名称 by <a href="http://www.mycodes.net/" target="_blank">源码之家</a></div>
     </body>
 </html>
