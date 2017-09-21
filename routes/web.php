@@ -12,5 +12,6 @@
  */
 
 // 后台登录
-Route::view('/', 'welcome', ['captcha' => captcha_src()]);
+Route::get('/', 'AdminController@index');
 
+Route::any('/login', 'AdminController@login');
