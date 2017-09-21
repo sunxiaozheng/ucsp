@@ -1,11 +1,14 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
-class AdminController extends Controller
+class IndexController extends Controller
 {
 
     /**
@@ -20,7 +23,6 @@ class AdminController extends Controller
     }
 
     /**
-     * 登录验证
      * @param Request $request
      * @return type
      * @version 1.0.0.0921
@@ -43,9 +45,20 @@ class AdminController extends Controller
 
             $validator = Validator::make($request->all(), $rules, $messages);
             if ($validator->fails()) {
-                return redirect('/')->withErrors($validator)->withInput();
+                return redirect('/admin')->withErrors($validator)->withInput();
             } else {
-                return redirect('/login');
+//                $username = $request->input('username');
+//                $password = $request->input('password');
+//                // 获取用户token
+//                $token = User::where('name', $username)->value('remember_token');
+//                $pwd = sha1($password . $token);
+
+                // 用户验证
+//                if (Auth::attempt(['name' => $username, 'password' => $pwd])) {
+////                    return redirect('/');
+//                    echo 111;
+//                    exit(0);
+//                }
             }
         } else {
             return view('backend.login');

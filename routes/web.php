@@ -11,7 +11,18 @@
   |
  */
 
-// 后台登录
-Route::get('/', 'AdminController@index');
+/**
+ * Frontend Route
+ */
+Route::namespace('Home')->group(function () {
+    Route::view('/', 'frontend.index');
+});
 
-Route::any('/login', 'AdminController@login');
+/**
+ * Backend Route
+ */
+Route::namespace('Admin')->group(function () {
+    Route::get('/admin', 'IndexController@index');
+
+    Route::any('/admin/login', 'IndexController@index');
+});

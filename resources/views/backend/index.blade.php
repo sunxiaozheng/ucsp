@@ -22,13 +22,13 @@
                 cursor: pointer;
             }
         </style>
-    </head> 
+    </head>
     <body>
         <div class="login">
             <div class="message">排课系统-管理登录</div>
             <div id="darkbannerwrap"></div>
 
-            {!! Form::open(['url' => '/login']) !!}
+            {!! Form::open(['url' => '/admin/login']) !!}
 
             <ul>
                 @foreach($errors->all() as $error)
