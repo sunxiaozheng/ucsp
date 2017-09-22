@@ -25,6 +25,6 @@ Route::namespace('Admin')->group(function () {
     Route::get('/admin', 'IndexController@index');
 
     Route::any('/admin/login', 'IndexController@login');
-    
+
     Route::get('/admin/logout', 'IndexController@logout');
 });
