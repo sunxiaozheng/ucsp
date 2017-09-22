@@ -6,7 +6,7 @@
                     <div class="panel-heading">Example Component</div>
 
                     <div class="panel-body">
-                        I'm an example component!
+                        这是一个vue组件!
                     </div>
                 </div>
             </div>

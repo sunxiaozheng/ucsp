@@ -61,7 +61,9 @@ class IndexController extends Controller
             }
         } else {
             if (Auth::check()) {
-                return view('backend.login');
+                // 用户信息
+                $user = Auth::user();
+                return view('backend.login', ['username' => $user->name]);
             } else {
                 return redirect()->intended('/admin');
             }
@@ -71,11 +73,27 @@ class IndexController extends Controller
     /**
      * 退出登录
      * @return type
+     * @version 1.0.0.0922
      */
     public function logout()
     {
         Auth::logout();
         return redirect()->intended('/admin');
+    }
+
+    /**
+     * 设置班级
+     * @version 1.0.0.0922
+     */
+    public function setclass()
+    {
+        if (Auth::check()) {
+            // 用户信息
+            $user = Auth::user();
+            return view('backend.setclass', ['username' => $user->name]);
+        } else {
+            return redirect()->intended('/admin');
+        }
     }
 
 }
