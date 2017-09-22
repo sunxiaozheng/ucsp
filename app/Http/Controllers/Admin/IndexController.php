@@ -12,6 +12,7 @@ class IndexController extends Controller
 {
 
     /**
+     * 后台首页
      * backend homepage
      * @param Request $request
      * @return mix
@@ -23,6 +24,7 @@ class IndexController extends Controller
     }
 
     /**
+     * 登录验证
      * @param Request $request
      * @return type
      * @version 1.0.0.0921
@@ -47,22 +49,33 @@ class IndexController extends Controller
             if ($validator->fails()) {
                 return redirect('/admin')->withErrors($validator)->withInput();
             } else {
-//                $username = $request->input('username');
-//                $password = $request->input('password');
-//                // 获取用户token
-//                $token = User::where('name', $username)->value('remember_token');
-//                $pwd = sha1($password . $token);
+                $username = $request->input('username');
+                $password = $request->input('password');
 
                 // 用户验证
-//                if (Auth::attempt(['name' => $username, 'password' => $pwd])) {
-////                    return redirect('/');
-//                    echo 111;
-//                    exit(0);
-//                }
+                if (Auth::attempt(array('name' => $username, 'password' => $password))) {
+                    return redirect('/admin/login');
+                } else {
+                    return redirect()->intended('/admin');
+                }
             }
         } else {
-            return view('backend.login');
+            if (Auth::check()) {
+                return view('backend.login');
+            } else {
+                return redirect()->intended('/admin');
+            }
         }
+    }
+
+    /**
+     * 退出登录
+     * @return type
+     */
+    public function logout()
+    {
+        Auth::logout();
+        return redirect()->intended('/admin');
     }
 
 }

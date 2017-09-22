@@ -15,7 +15,7 @@
  * Frontend Route
  */
 Route::namespace('Home')->group(function () {
-    Route::view('/', 'frontend.index');
+    Route::get('/', 'IndexController@index');
 });
 
 /**
@@ -24,5 +24,7 @@ Route::namespace('Home')->group(function () {
 Route::namespace('Admin')->group(function () {
     Route::get('/admin', 'IndexController@index');
 
-    Route::any('/admin/login', 'IndexController@index');
+    Route::any('/admin/login', 'IndexController@login');
+    
+    Route::get('/admin/logout', 'IndexController@logout');
 });
