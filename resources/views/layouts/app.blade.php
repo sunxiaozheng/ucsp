@@ -265,16 +265,10 @@
 
             <!-- Vue JS -->
             <script src="{{ asset('js/app.js') }}"></script>
+            <script src="{{ asset('js/bootstrap.js') }}"></script>
 
             <!-- end: JavaScript-->
-            <script type="text/javascript">
-var exampleVM2 = new Vue({
-    el: '#example-2',
-    data: {
-        greeting: true
-    }
-})
-            </script>
+            @yield('vue-js')
     </body>
 
 </html>
