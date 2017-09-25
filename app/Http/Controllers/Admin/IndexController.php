@@ -47,16 +47,16 @@ class IndexController extends Controller
 
             $validator = Validator::make($request->all(), $rules, $messages);
             if ($validator->fails()) {
-                return redirect('/admin')->withErrors($validator)->withInput();
+                return redirect('admin')->withErrors($validator)->withInput();
             } else {
                 $username = $request->input('username');
                 $password = $request->input('password');
 
                 // 用户验证
                 if (Auth::attempt(array('name' => $username, 'password' => $password))) {
-                    return redirect('/admin/login');
+                    return redirect()->route('admin.login');
                 } else {
-                    return redirect()->intended('/admin');
+                    return redirect()->intended(route('admin'));
                 }
             }
         } else {
@@ -65,7 +65,7 @@ class IndexController extends Controller
                 $user = Auth::user();
                 return view('backend.login', ['username' => $user->name]);
             } else {
-                return redirect()->intended('/admin');
+                return redirect()->intended(route('admin'));
             }
         }
     }

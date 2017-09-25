@@ -28,7 +28,7 @@
             <div class="message">排课系统-管理登录</div>
             <div id="darkbannerwrap"></div>
 
-            {!! Form::open(['url' => '/admin/login']) !!}
+            {!! Form::open(['url' => route('admin.login')]) !!}
 
             <ul>
                 @foreach($errors->all() as $error)

@@ -15,18 +15,23 @@
  * Frontend Route
  */
 Route::namespace('Home')->group(function () {
-    Route::get('/', 'IndexController@index');
+    Route::get('/', 'IndexController@index')->name('home');
 });
 
 /**
  * Backend Route
  */
-Route::namespace('Admin')->group(function () {
-    Route::get('/admin', 'IndexController@index');
+Route::namespace('Admin')->group(function() {
 
-    Route::any('/admin/login', 'IndexController@login');
+    Route::get('admin', 'IndexController@index')->name('admin');
 
-    Route::get('/admin/logout', 'IndexController@logout');
+    Route::any('admin/login', 'IndexController@login')->name('admin.login');
 
-    Route::get('/admin/setclass', 'IndexController@setclass');
+    Route::get('admin/logout', 'IndexController@logout')->name('admin.logout');
+
+    Route::get('admin/setclass', 'IndexController@setclass')->name('admin.setclass');
 });
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');
