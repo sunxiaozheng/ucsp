@@ -15,13 +15,14 @@
  * Frontend Route
  */
 Route::namespace('Home')->group(function () {
-    Route::get('/', 'IndexController@index')->name('home');
+    Route::get('/', 'IndexController@index')->name('index');
 });
 
 /**
  * Backend Route
  */
 Route::namespace('Admin')->group(function() {
+    Auth::routes();
 
     Route::get('admin', 'IndexController@index')->name('admin');
 
@@ -32,6 +33,7 @@ Route::namespace('Admin')->group(function() {
     Route::get('admin/setclass', 'IndexController@setclass')->name('admin.setclass');
 });
 
-Auth::routes();
 
-Route::get('/home', 'HomeController@index')->name('home');
+//Auth::routes();
+//
+//Route::get('/home', 'HomeController@index')->name('home');
