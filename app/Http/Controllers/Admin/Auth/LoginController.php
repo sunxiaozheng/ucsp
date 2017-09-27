@@ -37,4 +37,13 @@ use AuthenticatesUsers;
         $this->middleware('guest')->except('logout');
     }
 
+    /**
+     * 扩展登录字段
+     * @return string
+     */
+    public function username()
+    {
+        return 'username';
+    }
+
 }

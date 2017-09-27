@@ -12,6 +12,16 @@ class IndexController extends Controller
 {
 
     /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
+    /**
      * 后台首页
      * backend homepage
      * @param Request $request
