@@ -88,55 +88,91 @@ class IndexController extends Controller
         }
 
         // 限制条件
-        $result = $this->limitCourseNumber('历史', 4, $course_pool);
-        
+        $course_cond = [
+            [
+                'subj' => '历史',
+                'limit' => 4
+            ],
+            [
+                'subj' => '政治',
+                'limit' => 2
+            ],
+            [
+                'subj' => '语文',
+                'limit' => 8
+            ],
+            [
+                'subj' => '英语',
+                'limit' => 6
+            ],
+        ];
+        $result = $this->limitCourseNumber($course_cond, $course_pool);
+
         return view('Home.Index.index', ['arrs' => $result]);
     }
 
     /**
      * 限制课程的节数
-     * @param type $course_name
-     * @param type $course_num
+     * @param array $course_cond 限制排课条件
      */
-    public function limitCourseNumber($course_name = '', $course_num = 0, $course_pool = [])
+    public function limitCourseNumber($course_cond = [], $course_pool = [])
     {
-        $cha = $this->getCourseTimes($course_name, $course_num, $course_pool);
+        // 判断每个限制条件
+        foreach ($course_cond as $ck => $cv)
+        {
+            $course_cond[$ck]['cha'] = $this->getCourseTimes($cv['subj'], $cv['limit'], $course_pool);
+        }
 
-        // 多出的数据条数
-        if ($cha > 0) {
-            $temp_count = $cha;
-            foreach ($course_pool as $k => $v)
-            {
-                if ($v['course'] === $course_name && $temp_count > 0) {
-                    $temp_subjects = $this->subjects;
-                    foreach ($temp_subjects as $tsk => $tsv)
-                    {
-                        if ($tsv === $course_name) {
-                            unset($temp_subjects[$tsk]);
+
+        foreach ($course_cond as $key => $value)
+        {
+            $temp_count = 0;
+            $t_arr = [];
+            $temp_subjects = $t_arr ?: $this->subjects;
+
+            // 多出的数据条数
+            if ($course_cond[$key]['cha'] > 0) {
+                $temp_count = $value['cha'];
+
+                foreach ($course_pool as $k => $v)
+                {
+                    if ($v['course'] === $value['subj'] && $temp_count > 0) {
+                        foreach ($temp_subjects as $tsk => $tsv)
+                        {
+                            if ($tsv === $value['subj']) {
+                                unset($temp_subjects[$tsk]);
+                            }
                         }
-                    }
-                    sort($temp_subjects);
+                        sort($temp_subjects);
 
-                    $course_pool[$k]['course'] = $temp_subjects[array_rand($temp_subjects)];
-                    $course_pool[$k]['teacher'] = $this->matchTeacherByCourse($course_pool[$k]['course']);
-                    $temp_count -= 1;
-                } else {
-                    continue;
+                        $t_arr = $temp_subjects;
+                        $course_pool[$k]['course'] = $temp_subjects[array_rand($temp_subjects)];
+                        $course_pool[$k]['teacher'] = $this->matchTeacherByCourse($course_pool[$k]['course']);
+
+                        $temp_count -= 1;
+                    } else {
+                        continue;
+                    }
                 }
             }
         }
 
-        // 缺少的数据条数
-        if ($cha < 0) {
-            $temp_count = abs($cha);
-            foreach ($course_pool as $k => $v)
-            {
-                if ($v['course'] !== $course_name && $temp_count > 0) {
-                    $course_pool[$k]['course'] = $course_name;
-                    $course_pool[$k]['teacher'] = $this->matchTeacherByCourse($course_pool[$k]['course']);
-                    $temp_count -= 1;
-                } else {
-                    continue;
+        foreach ($course_cond as $key => $value)
+        {
+            $temp_count = 0;
+
+            // 缺少的数据条数
+            if ($course_cond[$key]['cha'] < 0) {
+                $temp_count = abs($value['cha']);
+                foreach ($course_pool as $k => $v)
+                {
+                    if ($v['course'] !== $value['subj'] && $temp_count > 0) {
+                        $course_pool[$k]['course'] = $value['subj'];
+                        $course_pool[$k]['teacher'] = $this->matchTeacherByCourse($course_pool[$k]['course']);
+                        $temp_count -= 1;
+                    } else {
+                        continue;
+                    }
                 }
             }
         }
