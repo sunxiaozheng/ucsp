@@ -12,15 +12,9 @@
  */
 
 /**
- * Frontend Route
+ * 前端
  */
-Route::namespace('Home')->group(function () {
-    Route::get('/', 'IndexController@index')->name('index');
-});
-
-/**
- * Backend Route
- */
-Route::namespace('Admin')->group(function() {
-    
+Route::group(['namespace' => 'Home'], function() {
+    // 首页
+    Route::get('/', 'IndexController@index')->name('home');
 });
