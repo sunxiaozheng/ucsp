@@ -22,18 +22,5 @@ Route::namespace('Home')->group(function () {
  * Backend Route
  */
 Route::namespace('Admin')->group(function() {
-    Auth::routes();
-
-    Route::get('admin', 'IndexController@index')->name('admin');
-
-    Route::any('admin/login', 'IndexController@login')->name('admin.login');
-
-    Route::get('admin/logout', 'IndexController@logout')->name('admin.logout');
-
-    Route::get('admin/setclass', 'IndexController@setclass')->name('admin.setclass');
+    
 });
-
-
-//Auth::routes();
-//
-//Route::get('/home', 'HomeController@index')->name('home');
