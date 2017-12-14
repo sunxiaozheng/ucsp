@@ -75,39 +75,27 @@ class IndexController extends Controller
 
     public function index()
     {
-        /*
-         * 课程池
-         */
-        $course_pool = [];
-        $subjects = $this->subjects;
-
-        for ($i = 0; $i < 40; $i++)
-        {
-            $course_pool[$i]['course'] = $subjects[array_rand($subjects)];
-            $course_pool[$i]['teacher'] = $this->matchTeacherByCourse($course_pool[$i]['course']);
-        }
-
         // 限制条件
         $course_cond = [
             [
                 'subj' => '历史',
-                'limit' => 4
-            ],
-            [
-                'subj' => '政治',
                 'limit' => 2
             ],
             [
+                'subj' => '政治',
+                'limit' => 4
+            ],
+            [
                 'subj' => '语文',
-                'limit' => 8
+                'limit' => 6
             ],
             [
                 'subj' => '英语',
-                'limit' => 6
+                'limit' => 20
             ],
         ];
-        $result = $this->limitCourseNumber($course_cond, $course_pool);
 
+        $result = $this->limitCourseNumber($course_cond);
         return view('Home.Index.index', ['arrs' => $result]);
     }
 
@@ -115,69 +103,102 @@ class IndexController extends Controller
      * 限制课程的节数
      * @param array $course_cond 限制排课条件
      */
-    public function limitCourseNumber($course_cond = [], $course_pool = [])
+    public function limitCourseNumber($course_cond = [])
     {
-        // 判断每个限制条件
-        foreach ($course_cond as $ck => $cv)
+        // 根据条数生成固定数据
+        // 然后生成缺少的数组
+        // 数组组合
+        // 打乱顺序
+        $init_arr = [];
+        $count = 0;
+        $init_subj = [];
+        $temp_arr = [];
+        $course_pool = [];
+        $result = [];
+        foreach ($course_cond as $k => $v)
         {
-            $course_cond[$ck]['cha'] = $this->getCourseTimes($cv['subj'], $cv['limit'], $course_pool);
-        }
-
-
-        foreach ($course_cond as $key => $value)
-        {
-            $temp_count = 0;
-            $t_arr = [];
-            $temp_subjects = $t_arr ?: $this->subjects;
-
-            // 多出的数据条数
-            if ($course_cond[$key]['cha'] > 0) {
-                $temp_count = $value['cha'];
-
-                foreach ($course_pool as $k => $v)
-                {
-                    if ($v['course'] === $value['subj'] && $temp_count > 0) {
-                        foreach ($temp_subjects as $tsk => $tsv)
-                        {
-                            if ($tsv === $value['subj']) {
-                                unset($temp_subjects[$tsk]);
-                            }
-                        }
-                        sort($temp_subjects);
-
-                        $t_arr = $temp_subjects;
-                        $course_pool[$k]['course'] = $temp_subjects[array_rand($temp_subjects)];
-                        $course_pool[$k]['teacher'] = $this->matchTeacherByCourse($course_pool[$k]['course']);
-
-                        $temp_count -= 1;
-                    } else {
-                        continue;
-                    }
-                }
+            for ($i = 0; $i < $v['limit']; $i++)
+            {
+                array_push($init_arr, $v['subj']);
             }
+            $count += $v['limit'];
+            $init_subj[$k] = $v['subj'];
         }
 
-        foreach ($course_cond as $key => $value)
+        // 过滤掉指定学科
+        $subjs = $this->filterSubject($init_subj);
+
+        /**
+         * @todo 判断lengh长度，确定是否需要生成数据
+         */
+        $length = 40 - $count;
+        for ($i = 0; $i < $length; $i++)
         {
-            $temp_count = 0;
-
-            // 缺少的数据条数
-            if ($course_cond[$key]['cha'] < 0) {
-                $temp_count = abs($value['cha']);
-                foreach ($course_pool as $k => $v)
-                {
-                    if ($v['course'] !== $value['subj'] && $temp_count > 0) {
-                        $course_pool[$k]['course'] = $value['subj'];
-                        $course_pool[$k]['teacher'] = $this->matchTeacherByCourse($course_pool[$k]['course']);
-                        $temp_count -= 1;
-                    } else {
-                        continue;
-                    }
-                }
-            }
+            $course_pool[$i]['course'] = $subjs[array_rand($subjs)];
+            $course_pool[$i]['teacher'] = $this->matchTeacherByCourse($course_pool[$i]['course']);
+        }
+        foreach ($init_arr as $ik => $iv)
+        {
+            $temp_arr[$ik]['course'] = $iv;
+            $temp_arr[$ik]['teacher'] = $this->matchTeacherByCourse($temp_arr[$ik]['course']);
         }
 
-        return $course_pool;
+        // 数组合并
+        $result = array_merge_recursive($temp_arr, $course_pool);
+
+        // 随机组合
+        shuffle($result);
+
+        // 上午末节下午首节不能为同一个老师
+        $result = $this->chkFirEnd($result);
+        
+        // 禁止科目相邻
+        $result = $this->denyNearCourse($result);
+
+        return $result;
+    }
+
+    /**
+     * 禁止科目相邻
+     * @version 1.0.0.1214
+     */
+    public function denyNearCourse($result = [])
+    {
+        foreach ($result as $k => $v)
+        {
+            
+        }
+        
+        return $result;
+    }
+
+    /**
+     * 上午末节下午首节不能为同一个老师
+     * 递归运算
+     * @param type $result
+     * @param boolean $num
+     * @return type
+     */
+    public function chkFirEnd($result = [])
+    {
+        if ($result[19]['course'] === $result[24]['course'] || $result[18]['course'] === $result[23]['course'] || $result[17]['course'] === $result[22]['course'] || $result[16]['course'] === $result[21]['course'] || $result[15]['course'] === $result[20]['course']) {
+            shuffle($result);
+            return $this->chkFirEnd($result);
+        } else {
+            return $result;
+        }
+    }
+
+    /**
+     * 过滤掉指定学科
+     * @version 1.0.0.1214
+     */
+    public function filterSubject($subjs = [])
+    {
+        $subjects = $this->subjects;
+        $arr = array_diff($subjects, $subjs);
+        sort($arr);
+        return $arr;
     }
 
     /**
