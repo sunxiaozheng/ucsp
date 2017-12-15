@@ -164,9 +164,63 @@ class IndexController extends Controller
 //        $result = $this->limitTeacherNumber($teacher_cond);
         // 科目互斥
 //        $result = $this->chkSubjMutex($this->subj_mutex);
+        // 禁止科目相邻
+        $course_front = [
+            [
+                'front' => '语文',
+                'behind' => '数学'
+            ],
+//            [
+//                'front' => '英语',
+//                'behind' => '化学',
+//            ],
+//            [
+//                'front' => '历史',
+//                'behind' => '政治',
+//            ]
+        ];
+        $result = $this->notInFrontOf($course_front);
 
         return view('Home.Index.index', ['arrs' => $result]);
     }
+
+    /**
+     * 禁止科目相邻
+     * 科目A不排于科目B前面
+     * @version 1.0.0.1215
+     */
+    public function notInFrontOf($course_front = [])
+    {
+        $result = $this->crtCourseTable();
+
+        foreach ($result as $k => $v)
+        {
+            foreach ($v as $vk => $vv)
+            {
+                foreach ($course_front as $key => $val)
+                {
+                    if ($result[$k][$vk]['course'] === $val['front']) {
+                        $result[$k][$vk]['course'] = 1;
+                        $result[$k][$vk]['teacher'] = 1;
+                    }
+                    
+                    if ($result[$k][$vk]['course'] === $val['behind']) {
+                        $result[$k][$vk]['course'] = 2;
+                        $result[$k][$vk]['teacher'] = 2;
+                    }
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * 教师当天的课分散或集中排列
+     * 尽量让他当天上下午都有课
+     * 尽量让他当天的课在一个上午或下午之内集中上完
+     * @version 1.0.0.1216
+     */
 
     /**
      * 科目互斥功能
@@ -275,6 +329,7 @@ class IndexController extends Controller
     /**
      * 限制课程的节数
      * @param array $course_cond 限制排课条件
+     * @version 1.0.0.1214
      */
     public function limitCourseNumber($course_cond = [])
     {
@@ -327,20 +382,6 @@ class IndexController extends Controller
 
         // 禁止科目相邻
         $result = $this->denyNearCourse($result);
-
-        return $result;
-    }
-
-    /**
-     * 禁止科目相邻
-     * @version 1.0.0.1214
-     */
-    public function denyNearCourse($result = [])
-    {
-        foreach ($result as $k => $v)
-        {
-            
-        }
 
         return $result;
     }
