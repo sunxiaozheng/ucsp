@@ -71,6 +71,29 @@ class IndexController extends Controller
                 'subj' => $this->subjects[8]
             ],
         ];
+
+        $this->subj_mutex = [
+            [
+                'one' => '语文',
+                'two' => '数学',
+                'day' => 1
+            ],
+            [
+                'one' => '语文',
+                'two' => '英语',
+                'day' => 2
+            ],
+            [
+                'one' => '英语',
+                'two' => '数学',
+                'day' => 3
+            ],
+            [
+                'one' => '政治',
+                'two' => '地理',
+                'day' => 5
+            ]
+        ];
     }
 
     public function index()
@@ -138,9 +161,73 @@ class IndexController extends Controller
         ];
 
         // 限制该教师某一天的上课节数
-        $result = $this->limitTeacherNumber($teacher_cond);
-//        dump($result);exit(0);
+//        $result = $this->limitTeacherNumber($teacher_cond);
+        // 科目互斥
+//        $result = $this->chkSubjMutex($this->subj_mutex);
+
         return view('Home.Index.index', ['arrs' => $result]);
+    }
+
+    /**
+     * 科目互斥功能
+     * 学科A与学科B不排在同一天
+     * @version 1.0.0.1215
+     */
+    public function chkSubjMutex($subj_mutex = [])
+    {
+        $result = $this->crtCourseTable();
+
+        $one = 0;
+        $two = 0;
+
+        foreach ($result as $k => $v)
+        {
+            foreach ($v as $vk => $vv)
+            {
+
+                foreach ($subj_mutex as $key => $val)
+                {
+                    if ($val['day'] === ($vk + 1)) {
+                        if ($result[$k][$vk]['course'] === $val['one']) {
+                            $one = 1;
+                        }
+
+                        if ($result[$k][$vk]['course'] === $val['two']) {
+                            $two = 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        $total = $one + $two;
+        if ($total > 1) {
+            return $this->chkSubjMutex($this->subj_mutex);
+        }
+
+        return $result;
+    }
+
+    /**
+     * 生成课程表
+     * @param int $day 每周上课天数
+     * @param int $section 每天上课节数
+     * @version 1.0.0.1215
+     */
+    public function crtCourseTable($day = 5, $section = 8)
+    {
+        $result = [];
+
+        for ($i = 0; $i < $section; $i++)
+        {
+            for ($j = 0; $j < $day; $j++)
+            {
+                $result[$i][$j]['course'] = $this->subjects[array_rand($this->subjects)];
+                $result[$i][$j]['teacher'] = $this->matchTeacherByCourse($result[$i][$j]['course']);
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -150,16 +237,7 @@ class IndexController extends Controller
      */
     public function limitTeacherNumber($teacher_cond = [])
     {
-        $result = [];
-
-        for ($i = 0; $i < 8; $i++)
-        {
-            for ($j = 0; $j < 5; $j++)
-            {
-                $result[$i][$j]['course'] = $this->subjects[array_rand($this->subjects)];
-                $result[$i][$j]['teacher'] = $this->matchTeacherByCourse($result[$i][$j]['course']);
-            }
-        }
+        $result = $this->crtCourseTable();
 
         foreach ($result as $rk => $rv)
         {
