@@ -160,13 +160,38 @@ class IndexController extends Controller
                 $result[$i][$j]['teacher'] = $this->matchTeacherByCourse($result[$i][$j]['course']);
             }
         }
-        
-        foreach ($teacher_cond as $k => $v)
-        {
-            
-        }
 
+        foreach ($result as $rk => $rv)
+        {
+            foreach ($rv as $key => $val)
+            {
+                foreach ($teacher_cond as $k => $v)
+                {
+                    if ($v['day'] === ($key + 1)) {
+                        for ($idx = 0; $idx < $v['limit']; $idx++)
+                        {
+                            $result[$idx][$key]['teacher'] = $v['teacher'];
+                            $result[$idx][$key]['course'] = $this->getCourseByTeacher($v['teacher']);
+                        }
+                    }
+                }
+            }
+        }
         return $result;
+    }
+
+    /**
+     * 根据教师查询对应的科目
+     * @version 1.0.0.1215
+     */
+    public function getCourseByTeacher($teacher_name = '')
+    {
+        foreach ($this->teachers as $k => $v)
+        {
+            if ($v['name'] === $teacher_name) {
+                return $v['subj'];
+            }
+        }
     }
 
     /**
