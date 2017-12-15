@@ -75,7 +75,7 @@ class IndexController extends Controller
 
     public function index()
     {
-        // 限制条件
+        // 限制该学科本周的上课节数条件
         $course_cond = [
             [
                 'subj' => '历史',
@@ -95,8 +95,78 @@ class IndexController extends Controller
             ],
         ];
 
-        $result = $this->limitCourseNumber($course_cond);
+        // 限制该学科本周的上课节数
+        /*
+          $result = $this->limitCourseNumber($course_cond);
+          $tmp = [];
+          $tn = 0; // 计数器
+          for ($i = 0; $i < 8; $i++)
+          {
+          for ($j = 0; $j < 5; $j++)
+          {
+          $tmp[$i][$j]['course'] = $result[$tn]['course'];
+          $tmp[$i][$j]['teacher'] = $result[$tn]['teacher'];
+          $tn += 1;
+          }
+          }
+          $result = $tmp;
+         * 
+         */
+
+        // 限制该教师某一天的上课节数条件
+        $teacher_cond = [
+            [
+                'teacher' => 't1',
+                'limit' => 4,
+                'day' => 1
+            ],
+            [
+                'teacher' => 't6',
+                'limit' => 1,
+                'day' => 4
+            ],
+            [
+                'teacher' => 't3',
+                'limit' => 3,
+                'day' => 1,
+            ],
+            [
+                'teacher' => 't8',
+                'limit' => 8,
+                'day' => 2
+            ]
+        ];
+
+        // 限制该教师某一天的上课节数
+        $result = $this->limitTeacherNumber($teacher_cond);
+//        dump($result);exit(0);
         return view('Home.Index.index', ['arrs' => $result]);
+    }
+
+    /**
+     * 限制教师在某一天的上课节数
+     * @param type $teacher_cond
+     * @version 1.0.0.1215
+     */
+    public function limitTeacherNumber($teacher_cond = [])
+    {
+        $result = [];
+
+        for ($i = 0; $i < 8; $i++)
+        {
+            for ($j = 0; $j < 5; $j++)
+            {
+                $result[$i][$j]['course'] = $this->subjects[array_rand($this->subjects)];
+                $result[$i][$j]['teacher'] = $this->matchTeacherByCourse($result[$i][$j]['course']);
+            }
+        }
+        
+        foreach ($teacher_cond as $k => $v)
+        {
+            
+        }
+
+        return $result;
     }
 
     /**
@@ -151,7 +221,7 @@ class IndexController extends Controller
 
         // 上午末节下午首节不能为同一个老师
         $result = $this->chkFirEnd($result);
-        
+
         // 禁止科目相邻
         $result = $this->denyNearCourse($result);
 
@@ -168,7 +238,7 @@ class IndexController extends Controller
         {
             
         }
-        
+
         return $result;
     }
 
@@ -178,6 +248,7 @@ class IndexController extends Controller
      * @param type $result
      * @param boolean $num
      * @return type
+     * @version 1.0.0.1214
      */
     public function chkFirEnd($result = [])
     {
