@@ -16,64 +16,14 @@
                 </tr>
             </thead>
             <tbody>
+                @foreach ($arrs as $arr)
                 <tr>
-                    @foreach($arrs as $items)
-                    @if ($loop->index < 5)
-                    <td>{{ $arrs[$loop->index]['course'] }}-{{ $arrs[$loop->index]['teacher'] }}</td>
-                    @endif
+                    @foreach ($arr as $k => $v)
+                    <td>{{ $arr[$k]['course'] }}-{{ $arr[$k]['teacher'] }}</td>
                     @endforeach
                 </tr>
-                <tr>
-                    @foreach($arrs as $items)
-                    @if ($loop->index >= 5 && $loop->index < 10)
-                    <td>{{ $arrs[$loop->index]['course'] }}-{{ $arrs[$loop->index]['teacher'] }}</td>
-                    @endif
-                    @endforeach
-                </tr>
-                <tr>
-                    @foreach($arrs as $items)
-                    @if ($loop->index >= 10 && $loop->index < 15)
-                    <td>{{ $arrs[$loop->index]['course'] }}-{{ $arrs[$loop->index]['teacher'] }}</td>
-                    @endif
-                    @endforeach
-                </tr>
-                <tr>
-                    @foreach($arrs as $items)
-                    @if ($loop->index >= 15 && $loop->index < 20)
-                    <td>{{ $arrs[$loop->index]['course'] }}-{{ $arrs[$loop->index]['teacher'] }}</td>
-                    @endif
-                    @endforeach
-                </tr>
-                <tr>
-                    @foreach($arrs as $items)
-                    @if ($loop->index >= 20 && $loop->index < 25)
-                    <td>{{ $arrs[$loop->index]['course'] }}-{{ $arrs[$loop->index]['teacher'] }}</td>
-                    @endif
-                    @endforeach
-                </tr>
-                <tr>
-                    @foreach($arrs as $items)
-                    @if ($loop->index >= 25 && $loop->index < 30)
-                    <td>{{ $arrs[$loop->index]['course'] }}-{{ $arrs[$loop->index]['teacher'] }}</td>
-                    @endif
-                    @endforeach
-                </tr>
-                <tr>
-                    @foreach($arrs as $items)
-                    @if ($loop->index >= 30 && $loop->index < 35)
-                    <td>{{ $arrs[$loop->index]['course'] }}-{{ $arrs[$loop->index]['teacher'] }}</td>
-                    @endif
-                    @endforeach
-                </tr>
-                <tr>
-                    @foreach($arrs as $items)
-                    @if ($loop->index >= 35 && $loop->index < 40)
-                    <td>{{ $arrs[$loop->index]['course'] }}-{{ $arrs[$loop->index]['teacher'] }}</td>
-                    @endif
-                    @endforeach
-                </tr>
+                @endforeach
             </tbody>
         </table>
-
     </body>
 </html>
