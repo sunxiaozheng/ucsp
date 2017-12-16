@@ -182,19 +182,33 @@ class IndexController extends Controller
 //        $result = $this->chkSubjMutex($this->subj_mutex);
         // 禁止科目相邻
 //        $result = $this->notInFrontOf($this->course_near);
-
+        // 教师当天的课分散或集中排列
+        $result = $this->teacherCourse(1);
         return view('Home.Index.index', ['arrs' => $result]);
     }
 
     /**
      * 教师当天的课分散或集中排列
-     * 尽量让他当天上下午都有课
-     * 尽量让他当天的课在一个上午或下午之内集中上完
+     * 第一种情况：尽量让他当天上下午都有课
+     * 第二种情况：尽量让他当天的课在一个上午或下午之内集中上完
+     * @todo 贪婪平均匹配算法
      * @version 1.0.0.1216
      */
-    public function teacherCourse()
+    public function teacherCourse($num = 1)
     {
+        $result = $this->crtCourseTable();
         
+        // 尽量让他当天上下午都有课
+        if ($num === 1) {
+            
+        }
+
+        // 尽量让他当天的课在一个上午或下午之内集中上完
+        if ($num === 2) {
+            
+        }
+        
+        return $result;
     }
 
     /**
