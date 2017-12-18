@@ -183,7 +183,7 @@ class IndexController extends Controller
         // 禁止科目相邻
 //        $result = $this->notInFrontOf($this->course_near);
         // 教师当天的课分散或集中排列
-        $result = $this->teacherCourse(1);
+        $result = $this->teacherCourse(1, 't1');
         return view('Home.Index.index', ['arrs' => $result]);
     }
 
@@ -191,24 +191,77 @@ class IndexController extends Controller
      * 教师当天的课分散或集中排列
      * 第一种情况：尽量让他当天上下午都有课
      * 第二种情况：尽量让他当天的课在一个上午或下午之内集中上完
-     * @todo 贪婪平均匹配算法
-     * @version 1.0.0.1216
+     * @version 1.0.0.1218
      */
-    public function teacherCourse($num = 1)
+    public function teacherCourse($num = 1, $teacher = '')
     {
         $result = $this->crtCourseTable();
-        
+        $temp = [];
+        for ($i = 0; $i < count($result); $i++)
+        {
+            for ($j = 0; $j < count($result[$i]); $j++)
+            {
+                $temp[$j][$i] = $result[$i][$j];
+            }
+        }
+
         // 尽量让他当天上下午都有课
         if ($num === 1) {
-            
+            $tarr = [];
+            $avg = intval(count($temp[0]) / 2);
+            foreach ($temp as $k => $v)
+            {
+                $tarr[$k]['am'] = $tarr[$k]['pm'] = 0;
+                foreach ($v as $vk => $vv)
+                {
+                    if ($vk < $avg) {
+                        if (in_array($teacher, $temp[$k][$vk])) {
+                            $tarr[$k]['am'] = 1;
+                        }
+                    } else {
+                        if (in_array($teacher, $temp[$k][$vk])) {
+                            $tarr[$k]['pm'] = 1;
+                        }
+                    }
+                }
+            }
+
+            foreach ($tarr as $tk => $tv)
+            {
+                $mr1 = mt_rand(0, 3);
+                $mr2 = mt_rand(4, 7);
+                foreach ($temp as $k => $v)
+                {
+                    foreach ($v as $vk => $vv)
+                    {
+                        if ($tv['am'] === 0) {
+                            $temp[$tk][$mr1]['teacher'] = $teacher;
+                            $temp[$tk][$mr1]['course'] = $this->getCourseByTeacher($teacher);
+                        }
+
+                        if ($tv['pm'] === 0) {
+                            $temp[$tk][$mr2]['teacher'] = $teacher;
+                            $temp[$tk][$mr2]['course'] = $this->getCourseByTeacher($teacher);
+                        }
+                    }
+                }
+            }
         }
 
         // 尽量让他当天的课在一个上午或下午之内集中上完
         if ($num === 2) {
             
         }
-        
-        return $result;
+
+        $res = [];
+        for ($i = 0; $i < count($temp); $i++)
+        {
+            for ($j = 0; $j < count($temp[$i]); $j++)
+            {
+                $res[$j][$i] = $temp[$i][$j];
+            }
+        }
+        return $res;
     }
 
     /**
