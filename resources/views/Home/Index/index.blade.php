@@ -8,11 +8,31 @@
         <table border="1" style="margin: 0 auto;text-align: center;" width="800" height="800">
             <thead>
                 <tr>
-                    <th>星期一</th>
-                    <th>星期二</th>
-                    <th>星期三</th>
-                    <th>星期四</th>
-                    <th>星期五</th>
+                    @for ($i = 0; $i < count($arrs[0]); $i++)
+                        @switch($i+1)
+                            @case(1)
+                                <th>星期一</th>
+                                @break
+                            @case(2)
+                                <th>星期二</th>
+                                @break
+                            @case(3)
+                                <th>星期三</th>
+                                @break
+                            @case(4)
+                                <th>星期四</th>
+                                @break
+                            @case(5)
+                                <th>星期五</th>
+                                @break
+                            @case(6)
+                                <th>星期六</th>
+                                @break
+                            @case(7)
+                                <th>星期日</th>
+                                @break
+                        @endswitch
+                    @endfor
                 </tr>
             </thead>
             <tbody>
