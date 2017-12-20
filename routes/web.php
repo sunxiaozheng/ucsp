@@ -16,5 +16,8 @@
  */
 Route::group(['namespace' => 'Home'], function() {
     // 首页
-    Route::get('/', 'IndexController@index')->name('home');
+    Route::get('/', 'IndexController@index');
+
+    // 限制学科本周的上课节数
+    Route::get('lmtcoursebysubj', 'IndexController@limitCourseBySubject');
 });

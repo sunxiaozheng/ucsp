@@ -8,7 +8,7 @@
         <table border="1" style="margin: 0 auto;text-align: center;" width="800" height="800">
             <thead>
                 <tr>
-                    @for ($i = 0; $i < count($arrs[0]); $i++)
+                    @for ($i = 0; $i < count($lists[0]); $i++)
                         @switch($i+1)
                             @case(1)
                                 <th>星期一</th>
@@ -36,10 +36,10 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($arrs as $arr)
+                @foreach ($lists as $list)
                 <tr>
-                    @foreach ($arr as $k => $v)
-                    <td>{{ $arr[$k]['course'] }}-{{ $arr[$k]['teacher'] }}</td>
+                    @foreach ($list as $k => $v)
+                    <td>{{ $list[$k]['course'] }}-{{ $list[$k]['teacher'] }}</td>
                     @endforeach
                 </tr>
                 @endforeach

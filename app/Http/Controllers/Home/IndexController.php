@@ -114,43 +114,7 @@ class IndexController extends Controller
 
     public function index()
     {
-        // 限制该学科本周的上课节数条件
-        $course_cond = [
-            [
-                'subj' => '历史',
-                'limit' => 2
-            ],
-            [
-                'subj' => '政治',
-                'limit' => 4
-            ],
-            [
-                'subj' => '语文',
-                'limit' => 6
-            ],
-            [
-                'subj' => '英语',
-                'limit' => 20
-            ],
-        ];
 
-        // 限制该学科本周的上课节数
-        /*
-          $result = $this->limitCourseNumber($course_cond);
-          $tmp = [];
-          $tn = 0; // 计数器
-          for ($i = 0; $i < 8; $i++)
-          {
-          for ($j = 0; $j < 5; $j++)
-          {
-          $tmp[$i][$j]['course'] = $result[$tn]['course'];
-          $tmp[$i][$j]['teacher'] = $result[$tn]['teacher'];
-          $tn += 1;
-          }
-          }
-          $result = $tmp;
-         * 
-         */
 
         // 限制该教师某一天的上课节数条件
         $teacher_cond = [
@@ -183,8 +147,160 @@ class IndexController extends Controller
         // 禁止科目相邻
 //        $result = $this->notInFrontOf($this->course_near);
         // 教师当天的课分散或集中排列
-        $result = $this->teacherCourse('t1');
-        return view('Home.Index.index', ['arrs' => $result]);
+//        $result = $this->teacherCourse('t1');
+        // 生成一个 5*8 的课程表
+        $course_table = $this->crtCourseTable(5, 8);
+        return view('Home.Index.index', ['lists' => $course_table]);
+    }
+
+    /**
+     * 生成课程表
+     * @param int $day 每周上课天数
+     * @param int $section 每天上课节数
+     * @version 1.0.0.1215
+     */
+    public function crtCourseTable($day = 5, $section = 8)
+    {
+        $course_table = [];
+
+        for ($i = 0; $i < $section; $i++)
+        {
+            for ($j = 0; $j < $day; $j++)
+            {
+                $course_table[$i][$j]['course'] = $this->subjects[array_rand($this->subjects)];
+                $course_table[$i][$j]['teacher'] = $this->getTeacherNameByCourse($course_table[$i][$j]['course']);
+            }
+        }
+
+        return $course_table;
+    }
+
+    /**
+     * 限制学科在本周的上课节数
+     * @route lmtcoursebysubj
+     * @version 1.0.0.1220
+     */
+    public function limitCourseBySubject()
+    {
+        // 生成课表
+        $course_table = $this->crtCourseTable();
+
+        // 根据科目限制
+        $course_cond = [
+            [
+                'subj' => '历史',
+                'limit' => 2
+            ],
+            [
+                'subj' => '政治',
+                'limit' => 4
+            ],
+            [
+                'subj' => '语文',
+                'limit' => 6
+            ],
+            [
+                'subj' => '英语',
+                'limit' => 20
+            ],
+        ];
+
+        // 根据限制条件返回数据表
+        $course_data = $this->limitNumByCourse($course_cond, $course_table);
+
+        // 转换展示形式
+        $idx = 0; // 指针
+        $temp_arr = []; // 临时数组
+        for ($i = 0; $i < 8; $i++)
+        {
+            for ($j = 0; $j < 5; $j++)
+            {
+                $temp_arr[$i][$j]['course'] = $course_data[$idx]['course'];
+                $temp_arr[$i][$j]['teacher'] = $course_data[$idx]['teacher'];
+                $idx += 1;
+            }
+        }
+
+        $result = $temp_arr; // 赋值
+        return view('Home.Index.index', ['lists' => $result]);
+    }
+
+    /**
+     * 根据科目限制课程本周的上课节数
+     * @param array $course_cond 限制排课条件
+     * @param array $course_table 课表
+     * @version 1.0.0.1214
+     */
+    public function limitNumByCourse($course_cond = [], $course_table = [])
+    {
+        $temp_table = []; // 临时用来放置限制条件
+        $temp_count = 0; // 限制条件中科目的总节数
+        $temp_subj = []; // 限制条件中所有的科目
+        $course_table_count = 0; // 存放课表总数据数
+        $limit_course_table = []; // 存放限制条件数组
+        $course_temp_table = []; // 存放剩余可创建的学科数据
+        // 创建一个限制条件组成的数组
+        foreach ($course_cond as $k => $v)
+        {
+            for ($i = 0; $i < $v['limit']; $i++)
+            {
+                array_push($temp_table, $v['subj']);
+            }
+            $temp_count += $v['limit'];
+            $temp_subj[$k] = $v['subj'];
+        }
+
+        // 从所有学科中过滤掉限制条件中的学科
+        $canCrtSubjs = $this->filterSubject($temp_subj);
+
+        // 获取课表数据条数
+        for ($m = 0; $m < count($course_table); $m++)
+        {
+            for ($n = 0; $n < count($course_table[$m]); $n++)
+            {
+                $course_table_count = ($m + 1) * ($n + 1);
+            }
+        }
+
+        // 剩余可创建的数据条数
+        $crt_count = $course_table_count - $temp_count;
+        for ($j = 0; $j < $crt_count; $j++)
+        {
+            $course_temp_table[$j]['course'] = $canCrtSubjs[array_rand($canCrtSubjs)];
+            $course_temp_table[$j]['teacher'] = $this->getTeacherNameByCourse($course_temp_table[$j]['course']);
+        }
+
+        // 处理限制条件构成数据
+        foreach ($temp_table as $ik => $iv)
+        {
+            $limit_course_table[$ik]['course'] = $iv;
+            $limit_course_table[$ik]['teacher'] = $this->getTeacherNameByCourse($limit_course_table[$ik]['course']);
+        }
+
+        // 合并限制条件数据和过滤后的学科数据
+        $final_course_table = array_merge_recursive($limit_course_table, $course_temp_table);
+
+        // 随机组合
+        shuffle($final_course_table);
+
+        // 上午末节下午首节不能为同一个老师
+//        $result = $this->chkFirEnd($final_course_table);
+        // 禁止科目相邻
+//        $result = $this->denyNearCourse($result);
+
+        return $final_course_table;
+    }
+
+    /**
+     * 过滤掉指定学科
+     * @version 1.0.0.1214
+     */
+    public function filterSubject($subjs = [])
+    {
+        $subjects = $this->subjects;
+        $arr = array_diff($subjects, $subjs);
+        sort($arr);
+        return $arr;
     }
 
     /**
@@ -324,28 +440,6 @@ class IndexController extends Controller
     }
 
     /**
-     * 生成课程表
-     * @param int $day 每周上课天数
-     * @param int $section 每天上课节数
-     * @version 1.0.0.1215
-     */
-    public function crtCourseTable($day = 5, $section = 8)
-    {
-        $result = [];
-
-        for ($i = 0; $i < $section; $i++)
-        {
-            for ($j = 0; $j < $day; $j++)
-            {
-                $result[$i][$j]['course'] = $this->subjects[array_rand($this->subjects)];
-                $result[$i][$j]['teacher'] = $this->matchTeacherByCourse($result[$i][$j]['course']);
-            }
-        }
-
-        return $result;
-    }
-
-    /**
      * 限制教师在某一天的上课节数
      * @param type $teacher_cond
      * @version 1.0.0.1215
@@ -388,66 +482,6 @@ class IndexController extends Controller
     }
 
     /**
-     * 限制课程的节数
-     * @param array $course_cond 限制排课条件
-     * @version 1.0.0.1214
-     */
-    public function limitCourseNumber($course_cond = [])
-    {
-        // 根据条数生成固定数据
-        // 然后生成缺少的数组
-        // 数组组合
-        // 打乱顺序
-        $init_arr = [];
-        $count = 0;
-        $init_subj = [];
-        $temp_arr = [];
-        $course_pool = [];
-        $result = [];
-        foreach ($course_cond as $k => $v)
-        {
-            for ($i = 0; $i < $v['limit']; $i++)
-            {
-                array_push($init_arr, $v['subj']);
-            }
-            $count += $v['limit'];
-            $init_subj[$k] = $v['subj'];
-        }
-
-        // 过滤掉指定学科
-        $subjs = $this->filterSubject($init_subj);
-
-        /**
-         * @todo 判断lengh长度，确定是否需要生成数据
-         */
-        $length = 40 - $count;
-        for ($i = 0; $i < $length; $i++)
-        {
-            $course_pool[$i]['course'] = $subjs[array_rand($subjs)];
-            $course_pool[$i]['teacher'] = $this->matchTeacherByCourse($course_pool[$i]['course']);
-        }
-        foreach ($init_arr as $ik => $iv)
-        {
-            $temp_arr[$ik]['course'] = $iv;
-            $temp_arr[$ik]['teacher'] = $this->matchTeacherByCourse($temp_arr[$ik]['course']);
-        }
-
-        // 数组合并
-        $result = array_merge_recursive($temp_arr, $course_pool);
-
-        // 随机组合
-        shuffle($result);
-
-        // 上午末节下午首节不能为同一个老师
-        $result = $this->chkFirEnd($result);
-
-        // 禁止科目相邻
-        $result = $this->denyNearCourse($result);
-
-        return $result;
-    }
-
-    /**
      * 上午末节下午首节不能为同一个老师
      * 递归运算
      * @param type $result
@@ -463,18 +497,6 @@ class IndexController extends Controller
         } else {
             return $result;
         }
-    }
-
-    /**
-     * 过滤掉指定学科
-     * @version 1.0.0.1214
-     */
-    public function filterSubject($subjs = [])
-    {
-        $subjects = $this->subjects;
-        $arr = array_diff($subjects, $subjs);
-        sort($arr);
-        return $arr;
     }
 
     /**
@@ -496,17 +518,17 @@ class IndexController extends Controller
     }
 
     /**
-     * 根据科目匹配任教该科目的教师
+     * 根据科目获取任课教师名称
      * @param string $course_name 课程名称
      * @version 1.0.0.1213
      */
-    public function matchTeacherByCourse($course_name = '')
+    public function getTeacherNameByCourse($course_name = '')
     {
-        $teachers = $this->teachers;
-        foreach ($teachers as $k => $v)
+        $teacher_list = $this->teachers;
+        foreach ($teacher_list as $k => $v)
         {
             if ($v['subj'] === $course_name && $v['status'] === 1) {
-                return $teachers[$k]['name'];
+                return $teacher_list[$k]['name'];
             }
         }
     }
