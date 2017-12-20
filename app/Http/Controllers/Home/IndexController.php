@@ -13,11 +13,13 @@ use App\Http\Controllers\Controller;
 class IndexController extends Controller
 {
 
+    /**
+     * 初始化数据
+     * @version 1.0.0.1220
+     */
     public function __construct()
     {
-        /*
-         * 获取所有的学科（有穷值）
-         */
+        // 所有的学科
         $this->subjects = ['语文', '数学', '英语', '物理', '化学', '生物', '历史', '地理', '政治'];
 
         /*
@@ -115,39 +117,17 @@ class IndexController extends Controller
     public function index()
     {
 
-
-        // 限制该教师某一天的上课节数条件
-        $teacher_cond = [
-            [
-                'teacher' => 't1',
-                'limit' => 4,
-                'day' => 1
-            ],
-            [
-                'teacher' => 't6',
-                'limit' => 1,
-                'day' => 4
-            ],
-            [
-                'teacher' => 't3',
-                'limit' => 3,
-                'day' => 1,
-            ],
-            [
-                'teacher' => 't8',
-                'limit' => 8,
-                'day' => 2
-            ]
-        ];
-
-        // 限制该教师某一天的上课节数
-//        $result = $this->limitTeacherNumber($teacher_cond);
         // 科目互斥
 //        $result = $this->chkSubjMutex($this->subj_mutex);
         // 禁止科目相邻
 //        $result = $this->notInFrontOf($this->course_near);
         // 教师当天的课分散或集中排列
 //        $result = $this->teacherCourse('t1');
+//        
+        // 上午末节下午首节不能为同一个老师
+//        $result = $this->chkFirEnd($final_course_table);
+        // 禁止科目相邻
+//        $result = $this->denyNearCourse($result);
         // 生成一个 5*8 的课程表
         $course_table = $this->crtCourseTable(5, 8);
         return view('Home.Index.index', ['lists' => $course_table]);
@@ -280,13 +260,8 @@ class IndexController extends Controller
         // 合并限制条件数据和过滤后的学科数据
         $final_course_table = array_merge_recursive($limit_course_table, $course_temp_table);
 
-        // 随机组合
+        // 变乱数组
         shuffle($final_course_table);
-
-        // 上午末节下午首节不能为同一个老师
-//        $result = $this->chkFirEnd($final_course_table);
-        // 禁止科目相邻
-//        $result = $this->denyNearCourse($result);
 
         return $final_course_table;
     }
@@ -301,6 +276,126 @@ class IndexController extends Controller
         $arr = array_diff($subjects, $subjs);
         sort($arr);
         return $arr;
+    }
+
+    /**
+     * 限制教师当天的上课节数
+     * @route lmttechdailycoursenum
+     * @version 1.0.0.1220
+     */
+    public function limitTeacherDailyCourseNumber()
+    {
+        // 限制教师当天上课节数条件
+        $teacher_cond = [
+            [
+                'teacher' => 't1',
+                'limit' => 4,
+                'day' => 1
+            ],
+            [
+                'teacher' => 't6',
+                'limit' => 1,
+                'day' => 4
+            ],
+            [
+                'teacher' => 't2',
+                'limit' => 1,
+                'day' => 1
+            ],
+            [
+                'teacher' => 't3',
+                'limit' => 1,
+                'day' => 1,
+            ],
+            [
+                'teacher' => 't8',
+                'limit' => 8,
+                'day' => 2
+            ]
+        ];
+
+        // 限制该教师某一天的上课节数
+        $result = $this->limitTeacherCourseNumber($teacher_cond);
+        return view('Home.Index.index', ['lists' => $result]);
+    }
+
+    /**
+     * 限制教师在某一天的上课节数
+     * @param array $teacher_cond 限制教师当天上课节数条件
+     * @version 1.0.0.1215
+     */
+    public function limitTeacherCourseNumber($teacher_cond = [])
+    {
+        $course_table = $this->crtCourseTable();
+
+        // 计算出每天需要处理的数据节数
+        $temp_days = [];
+        foreach ($teacher_cond as $ck => $cv)
+        {
+            $temp_days[] = $cv['day'];
+        }
+        $days = array_unique($temp_days);
+        sort($days);
+
+
+        /**
+         * @todo 思路
+         * 生成一个同一天教师的列表，即星期一所有任课教师名称的列表
+         * 在最后追加是数据的时候用以区分
+         */
+        $num = 0;
+        // 整理出每天的上课总节数
+        $final_cond = [];
+        foreach ($days as $dk => $dv)
+        {
+            $final_cond[$dk]['class_num'] = 0; // 节次
+            $final_cond[$dk]['num'] = 0; // 教师数
+            foreach ($teacher_cond as $tk => $tv)
+            {
+                if ($tv['day'] === $dv) {
+                    $final_cond[$dk]['day'] = $dv;
+                    $final_cond[$dk]['class_num'] += $tv['limit'];
+                    $final_cond[$dk]['num'] += 1;
+                    $final_cond[$dk]['n'][$num] = $tv['teacher'];
+                    $num++;
+                }
+            }
+        }
+        dump($final_cond);
+        exit(0);
+        $result = [];
+        foreach ($final_cond as $k => $v)
+        {
+            $result[$v['day']] = [
+                'class_num' => $v['class_num'],
+                'teacher_num' => $v['num'],
+                'teacher' => $v['tech']
+            ];
+        }
+
+
+        foreach ($teacher_cond as $k => $v)
+        {
+            for ($i = 0; $i < count($course_table); $i++)
+            {
+                for ($j = 0; $j < count($course_table[$i]); $j++)
+                {
+                    if ($v['day'] === $j) {
+                        for ($idx = 0; $idx < $result[$v['day']]['class_num']; $idx++)
+                        {
+                            $course_table[$idx][$j - 1]['teacher'] = 11111;
+                        }
+
+                        for ($idx = 0; $idx < 8 - $result[$v['day']]['class_num']; $idx++)
+                        {
+                            $course_table[$result[$v['day']]['class_num'] + $idx][$j - 1]['teacher'] = 3333;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $course_table;
     }
 
     /**
@@ -440,35 +535,7 @@ class IndexController extends Controller
     }
 
     /**
-     * 限制教师在某一天的上课节数
-     * @param type $teacher_cond
-     * @version 1.0.0.1215
-     */
-    public function limitTeacherNumber($teacher_cond = [])
-    {
-        $result = $this->crtCourseTable();
-
-        foreach ($result as $rk => $rv)
-        {
-            foreach ($rv as $key => $val)
-            {
-                foreach ($teacher_cond as $k => $v)
-                {
-                    if ($v['day'] === ($key + 1)) {
-                        for ($idx = 0; $idx < $v['limit']; $idx++)
-                        {
-                            $result[$idx][$key]['teacher'] = $v['teacher'];
-                            $result[$idx][$key]['course'] = $this->getCourseByTeacher($v['teacher']);
-                        }
-                    }
-                }
-            }
-        }
-        return $result;
-    }
-
-    /**
-     * 根据教师查询对应的科目
+     * 根据教师查询对应的任课科目
      * @version 1.0.0.1215
      */
     public function getCourseByTeacher($teacher_name = '')

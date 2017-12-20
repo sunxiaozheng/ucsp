@@ -20,4 +20,7 @@ Route::group(['namespace' => 'Home'], function() {
 
     // 限制学科本周的上课节数
     Route::get('lmtcoursebysubj', 'IndexController@limitCourseBySubject');
+
+    // 限制教师当天的上课节数
+    Route::get('lmttechdailycoursenum', 'IndexController@limitTeacherDailyCourseNumber');
 });
