@@ -22,81 +22,49 @@ class IndexController extends Controller
         // 所有的学科
         $this->subjects = ['语文', '数学', '英语', '物理', '化学', '生物', '历史', '地理', '政治'];
 
-        /*
-         * 获取所有任课教师以及该教师的任课状态和任课学科(有穷值)
-         * 任课状态[1正常0冲突]
-         */
+        // 教师列表
         $this->teachers = [
             [
                 'name' => 't1',
-                'status' => 1,
                 'subj' => $this->subjects[0]
             ],
             [
                 'name' => 't2',
-                'status' => 1,
                 'subj' => $this->subjects[1]
             ],
             [
                 'name' => 't3',
-                'status' => 1,
                 'subj' => $this->subjects[2]
             ],
             [
                 'name' => 't4',
-                'status' => 1,
                 'subj' => $this->subjects[3]
             ],
             [
                 'name' => 't5',
-                'status' => 1,
                 'subj' => $this->subjects[4]
             ],
             [
                 'name' => 't6',
-                'status' => 1,
                 'subj' => $this->subjects[5]
             ],
             [
                 'name' => 't7',
-                'status' => 1,
                 'subj' => $this->subjects[6]
             ],
             [
                 'name' => 't8',
-                'status' => 1,
                 'subj' => $this->subjects[7]
             ],
             [
                 'name' => 't9',
-                'status' => 1,
                 'subj' => $this->subjects[8]
             ],
-        ];
-
-
-
-        // 禁止科目相邻
-        $this->course_near = [
-            [
-                'front' => '语文',
-                'behind' => '数学'
-            ],
-            [
-                'front' => '英语',
-                'behind' => '化学',
-            ],
-            [
-                'front' => '历史',
-                'behind' => '政治',
-            ]
         ];
     }
 
     public function index()
     {
-        // 禁止科目相邻
-//        $result = $this->notInFrontOf($this->course_near);
         // 教师当天的课分散或集中排列
 //        $result = $this->teacherCourse('t1');
 //        
@@ -429,10 +397,12 @@ class IndexController extends Controller
                 for ($j = 0; $j < count($course_table[$i]); $j++)
                 {
                     if ($sv['day'] === $j) {
+                        // 当天包含第一节
                         if ($course_table[$i][$j - 1]['course'] === $sv['one']) {
                             $has_one = 1;
                         }
 
+                        // 当天包含第二节
                         if ($course_table[$i][$j - 1]['course'] === $sv['two']) {
                             $has_two = 1;
                         }
@@ -444,6 +414,65 @@ class IndexController extends Controller
         $total = $has_one + $has_two;
         if ($total > 1) {
             return $this->chkSubjMutex($subj_mutex);
+        }
+
+        return $course_table;
+    }
+
+    /**
+     * 禁止科目相邻
+     * @route coursenotnextto
+     * @version 1.0.0.1221
+     */
+    public function courseNotNextTo()
+    {
+        // 禁止科目相邻条件
+        $course_cond = [
+            [
+                'front' => '语文',
+                'behind' => '数学'
+            ],
+            [
+                'front' => '英语',
+                'behind' => '化学',
+            ],
+            [
+                'front' => '历史',
+                'behind' => '政治',
+            ]
+        ];
+
+
+        // 检测科目相邻
+        $result = $this->notNextTo($course_cond);
+        return view('Home.Index.index', ['lists' => $result]);
+    }
+
+    /**
+     * 禁止科目相邻
+     * 科目A不排于科目B前面
+     * @version 1.0.0.1216
+     */
+    public function notNextTo($course_cond = [])
+    {
+        // 生成课表
+        $course_table = $this->crtCourseTable();
+
+        foreach ($course_cond as $k => $v)
+        {
+            for ($i = 0; $i < count($course_table); $i++)
+            {
+                for ($j = 0; $j < count($course_table[$i]); $j++)
+                {
+                    if ($i < 7) {
+                        if ($course_table[$i][$j]['course'] === $v['front']) {
+                            if ($course_table[$i + 1][$j]['course'] === $v['behind']) {
+                                return $this->notNextTo($course_cond);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         return $course_table;
@@ -519,33 +548,6 @@ class IndexController extends Controller
     }
 
     /**
-     * 禁止科目相邻
-     * 科目A不排于科目B前面
-     * @version 1.0.0.1216
-     */
-    public function notInFrontOf($course_front = [])
-    {
-        $result = $this->crtCourseTable();
-
-        for ($i = 0; $i < count($result); $i++)
-        {
-            for ($j = 0; $j < count($result[$i]); $j++)
-            {
-                foreach ($course_front as $k => $v)
-                {
-                    if ($i < 7) {
-                        if ($result[$i][$j]['course'] === $v['front'] && $result[$i][$j + 1] === $v['behind']) {
-                            return $this->notInFrontOf($this->course_near);
-                        }
-                    }
-                }
-            }
-        }
-
-        return $result;
-    }
-
-    /**
      * 根据教师查询对应的任课科目
      * @version 1.0.0.1215
      */
@@ -605,7 +607,7 @@ class IndexController extends Controller
         $teacher_list = $this->teachers;
         foreach ($teacher_list as $k => $v)
         {
-            if ($v['subj'] === $course_name && $v['status'] === 1) {
+            if ($v['subj'] === $course_name) {
                 return $teacher_list[$k]['name'];
             }
         }
