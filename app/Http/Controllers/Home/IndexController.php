@@ -571,6 +571,32 @@ class IndexController extends Controller
     }
 
     /**
+     * 上午末节下午首节不能为同一个老师
+     * @route amnotnexttopm
+     * @version 1.0.0.1221
+     */
+    public function amNotNextToPm()
+    {
+        $course_table = $this->crtCourseTable();
+
+        $day_div = intval(count($course_table) / 2); // 切割上下午
+
+        for ($i = 0; $i < count($course_table); $i++)
+        {
+            for ($j = 0; $j < count($course_table[$i]); $j++)
+            {
+                if ($course_table[$day_div - 1][$j]['teacher'] === $course_table[$day_div][$j]['teacher']) {
+                    return $this->amNotNextToPm();
+                }
+            }
+        }
+
+        // 赋值
+        $result = $course_table;
+        return view('Home.Index.index', ['lists' => $result]);
+    }
+
+    /**
      * 根据教师查询对应的任课科目
      * @version 1.0.0.1215
      */
