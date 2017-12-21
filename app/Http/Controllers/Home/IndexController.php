@@ -74,28 +74,7 @@ class IndexController extends Controller
             ],
         ];
 
-        $this->subj_mutex = [
-            [
-                'one' => '语文',
-                'two' => '数学',
-                'day' => 1
-            ],
-            [
-                'one' => '语文',
-                'two' => '英语',
-                'day' => 2
-            ],
-            [
-                'one' => '英语',
-                'two' => '数学',
-                'day' => 3
-            ],
-            [
-                'one' => '政治',
-                'two' => '地理',
-                'day' => 5
-            ]
-        ];
+
 
         // 禁止科目相邻
         $this->course_near = [
@@ -116,9 +95,6 @@ class IndexController extends Controller
 
     public function index()
     {
-
-        // 科目互斥
-//        $result = $this->chkSubjMutex($this->subj_mutex);
         // 禁止科目相邻
 //        $result = $this->notInFrontOf($this->course_near);
         // 教师当天的课分散或集中排列
@@ -398,6 +374,82 @@ class IndexController extends Controller
     }
 
     /**
+     * 科目互斥
+     * @route chksubjmutex
+     * @version 1.0.0.1221
+     */
+    public function chkSubjectMutex()
+    {
+        // 科目互斥条件
+        $subj_mutex = [
+            [
+                'one' => '语文',
+                'two' => '数学',
+                'day' => 1
+            ],
+            [
+                'one' => '语文',
+                'two' => '英语',
+                'day' => 2
+            ],
+            [
+                'one' => '英语',
+                'two' => '数学',
+                'day' => 3
+            ],
+            [
+                'one' => '政治',
+                'two' => '地理',
+                'day' => 5
+            ]
+        ];
+
+        // 检测科目互斥
+        $result = $this->chkSubjMutex($subj_mutex);
+        return view('Home.Index.index', ['lists' => $result]);
+    }
+
+    /**
+     * 科目互斥功能
+     * 学科A与学科B不排在同一天
+     * @version 1.0.0.1215
+     */
+    public function chkSubjMutex($subj_mutex = [])
+    {
+        // 生成课表
+        $course_table = $this->crtCourseTable();
+
+        $has_one = 0;
+        $has_two = 0;
+
+        foreach ($subj_mutex as $sk => $sv)
+        {
+            for ($i = 0; $i < count($course_table); $i++)
+            {
+                for ($j = 0; $j < count($course_table[$i]); $j++)
+                {
+                    if ($sv['day'] === $j) {
+                        if ($course_table[$i][$j - 1]['course'] === $sv['one']) {
+                            $has_one = 1;
+                        }
+
+                        if ($course_table[$i][$j - 1]['course'] === $sv['two']) {
+                            $has_two = 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        $total = $has_one + $has_two;
+        if ($total > 1) {
+            return $this->chkSubjMutex($subj_mutex);
+        }
+
+        return $course_table;
+    }
+
+    /**
      * 教师当天的课分散或集中排列
      * 尽量让他当天上下午都有课
      * @version 1.0.0.1218
@@ -488,46 +540,6 @@ class IndexController extends Controller
                     }
                 }
             }
-        }
-
-        return $result;
-    }
-
-    /**
-     * 科目互斥功能
-     * 学科A与学科B不排在同一天
-     * @version 1.0.0.1215
-     */
-    public function chkSubjMutex($subj_mutex = [])
-    {
-        $result = $this->crtCourseTable();
-
-        $one = 0;
-        $two = 0;
-
-        foreach ($result as $k => $v)
-        {
-            foreach ($v as $vk => $vv)
-            {
-
-                foreach ($subj_mutex as $key => $val)
-                {
-                    if ($val['day'] === ($vk + 1)) {
-                        if ($result[$k][$vk]['course'] === $val['one']) {
-                            $one = 1;
-                        }
-
-                        if ($result[$k][$vk]['course'] === $val['two']) {
-                            $two = 1;
-                        }
-                    }
-                }
-            }
-        }
-
-        $total = $one + $two;
-        if ($total > 1) {
-            return $this->chkSubjMutex($this->subj_mutex);
         }
 
         return $result;
