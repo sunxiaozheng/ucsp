@@ -189,7 +189,7 @@ class IndexController extends Controller
         $course_data = $this->limitNumByCourse($course_cond, $course_table);
 
         // 转换展示形式
-        $idx = 0; // 指针
+        $idx = 0;       // 指针
         $temp_arr = []; // 临时数组
         for ($i = 0; $i < 8; $i++)
         {
@@ -328,7 +328,7 @@ class IndexController extends Controller
     {
         $course_table = $this->crtCourseTable();
 
-        // 计算出每天需要处理的数据节数
+        // 计算出需要处理数据的天数
         $temp_days = [];
         foreach ($teacher_cond as $ck => $cv)
         {
@@ -337,42 +337,37 @@ class IndexController extends Controller
         $days = array_unique($temp_days);
         sort($days);
 
-
-        /**
-         * @todo 思路
-         * 生成一个同一天教师的列表，即星期一所有任课教师名称的列表
-         * 在最后追加是数据的时候用以区分
-         */
-        $num = 0;
         // 整理出每天的上课总节数
         $final_cond = [];
         foreach ($days as $dk => $dv)
         {
+            $teacher_data = []; // 存放教师信息
             $final_cond[$dk]['class_num'] = 0; // 节次
-            $final_cond[$dk]['num'] = 0; // 教师数
             foreach ($teacher_cond as $tk => $tv)
             {
                 if ($tv['day'] === $dv) {
                     $final_cond[$dk]['day'] = $dv;
                     $final_cond[$dk]['class_num'] += $tv['limit'];
-                    $final_cond[$dk]['num'] += 1;
-                    $final_cond[$dk]['n'][$num] = $tv['teacher'];
-                    $num++;
+                    for ($i = 0; $i < $tv['limit']; $i++)
+                    {
+                        array_push($teacher_data, $tv['teacher']);
+                    }
+                    $final_cond[$dk]['data'] = $teacher_data;
+                    $final_cond[$dk]['course'][] = $this->getCourseByTeacher($tv['teacher']);
                 }
             }
         }
-        dump($final_cond);
-        exit(0);
-        $result = [];
+
+        // 组织数据格式
+        $final_data = [];
         foreach ($final_cond as $k => $v)
         {
-            $result[$v['day']] = [
-                'class_num' => $v['class_num'],
-                'teacher_num' => $v['num'],
-                'teacher' => $v['tech']
+            $final_data[$v['day']] = [
+                'class_num' => $v['class_num'], // 每天对应的课程节数
+                'tech_data' => $v['data'], // 教师数据
+                'course_list' => array_unique($v['course'])
             ];
         }
-
 
         foreach ($teacher_cond as $k => $v)
         {
@@ -381,14 +376,18 @@ class IndexController extends Controller
                 for ($j = 0; $j < count($course_table[$i]); $j++)
                 {
                     if ($v['day'] === $j) {
-                        for ($idx = 0; $idx < $result[$v['day']]['class_num']; $idx++)
+                        for ($idx = 0; $idx < $final_data[$v['day']]['class_num']; $idx++)
                         {
-                            $course_table[$idx][$j - 1]['teacher'] = 11111;
+                            $course_table[$idx][$j - 1]['teacher'] = $final_data[$v['day']]['tech_data'][$idx];
+                            $course_table[$idx][$j - 1]['course'] = $this->getCourseByTeacher($final_data[$v['day']]['tech_data'][$idx]);
                         }
 
-                        for ($idx = 0; $idx < 8 - $result[$v['day']]['class_num']; $idx++)
+                        for ($idx = 0; $idx < count($course_table) - $final_data[$v['day']]['class_num']; $idx++)
                         {
-                            $course_table[$result[$v['day']]['class_num'] + $idx][$j - 1]['teacher'] = 3333;
+                            // 排除掉每一天的任课信息
+                            $temp_subjs = $this->filterSubject($final_data[$v['day']]['course_list']);
+                            $course_table[$final_data[$v['day']]['class_num'] + $idx][$j - 1]['course'] = $temp_subjs[array_rand($temp_subjs)];
+                            $course_table[$final_data[$v['day']]['class_num'] + $idx][$j - 1]['teacher'] = $this->getTeacherNameByCourse($temp_subjs[array_rand($temp_subjs)]);
                         }
                     }
                 }
