@@ -63,15 +63,12 @@ class IndexController extends Controller
         ];
     }
 
+    /**
+     * 程序入口
+     * @version 1.0.0.1221
+     */
     public function index()
     {
-        // 教师当天的课分散或集中排列
-//        $result = $this->teacherCourse('t1');
-//        
-        // 上午末节下午首节不能为同一个老师
-//        $result = $this->chkFirEnd($final_course_table);
-        // 禁止科目相邻
-//        $result = $this->denyNearCourse($result);
         // 生成一个 5*8 的课程表
         $course_table = $this->crtCourseTable(5, 8);
         return view('Home.Index.index', ['lists' => $course_table]);
@@ -449,7 +446,6 @@ class IndexController extends Controller
     }
 
     /**
-     * 禁止科目相邻
      * 科目A不排于科目B前面
      * @version 1.0.0.1216
      */
@@ -464,9 +460,13 @@ class IndexController extends Controller
             {
                 for ($j = 0; $j < count($course_table[$i]); $j++)
                 {
+                    // 防止下标越界
                     if ($i < 7) {
+                        // 第一个条件成立
                         if ($course_table[$i][$j]['course'] === $v['front']) {
+                            // 第二个条件成立
                             if ($course_table[$i + 1][$j]['course'] === $v['behind']) {
+                                // 递归
                                 return $this->notNextTo($course_cond);
                             }
                         }
@@ -479,72 +479,95 @@ class IndexController extends Controller
     }
 
     /**
-     * 教师当天的课分散或集中排列
+     * 教师当天的课分散排列
+     * @route coursediv
+     * @version 1.0.0.1221
+     */
+    public function courseDevide()
+    {
+        // 教师列表
+        $teacher_arr = ['t1', 't3', 't2'];
+
+        // 处理教师课表
+        $result = $this->teacherCourseDevide($teacher_arr);
+        return view('Home.Index.index', ['lists' => $result]);
+    }
+
+    /**
      * 尽量让他当天上下午都有课
+     * @param array $teacher_arr 教师列表
      * @version 1.0.0.1218
      */
-    public function teacherCourse($teacher = '')
+    public function teacherCourseDevide($teacher_arr = [])
     {
-        $result = $this->crtCourseTable();
-        $temp = [];
-        for ($i = 0; $i < count($result); $i++)
+        // 生成课表
+        $course_table = $this->crtCourseTable();
+
+        // 转换课表样式
+        $temp_course_table = [];
+        for ($i = 0; $i < count($course_table); $i++)
         {
-            for ($j = 0; $j < count($result[$i]); $j++)
+            for ($j = 0; $j < count($course_table[$i]); $j++)
             {
-                $temp[$j][$i] = $result[$i][$j];
+                $temp_course_table[$j][$i] = $course_table[$i][$j];
             }
         }
 
-        // 尽量让他当天上下午都有课
-        $tarr = [];
-        $avg = intval(count($temp[0]) / 2);
-        foreach ($temp as $k => $v)
-        {
-            $tarr[$k]['am'] = $tarr[$k]['pm'] = 0;
-            foreach ($v as $vk => $vv)
-            {
-                if ($vk < $avg) {
-                    if (in_array($teacher, $temp[$k][$vk])) {
-                        $tarr[$k]['am'] = 1;
-                    }
-                } else {
-                    if (in_array($teacher, $temp[$k][$vk])) {
-                        $tarr[$k]['pm'] = 1;
-                    }
-                }
-            }
-        }
+        $temp_day_arr = []; // 存放上午和下午数据
+        $day_div = intval(count($temp_course_table[0]) / 2); // 切割上下午
 
-        foreach ($tarr as $tk => $tv)
+        foreach ($temp_course_table as $k => $v)
         {
-            $mr1 = mt_rand(0, 3);
-            $mr2 = mt_rand(4, 7);
-            foreach ($temp as $k => $v)
+            for ($t = 0; $t < count($teacher_arr); $t++)
             {
+                // 初始化
+                $temp_day_arr[$k][$t]['am'] = $temp_day_arr[$k][$t]['pm'] = 0;
+                $temp_day_arr[$k][$t]['teacher'] = $teacher_arr[$t];
                 foreach ($v as $vk => $vv)
                 {
-                    if ($tv['am'] === 0) {
-                        $temp[$tk][$mr1]['teacher'] = $teacher;
-                        $temp[$tk][$mr1]['course'] = $this->getCourseByTeacher($teacher);
-                    }
-
-                    if ($tv['pm'] === 0) {
-                        $temp[$tk][$mr2]['teacher'] = $teacher;
-                        $temp[$tk][$mr2]['course'] = $this->getCourseByTeacher($teacher);
+                    if ($vk < $day_div) {
+                        if (in_array($teacher_arr[$t], $temp_course_table[$k][$vk])) {
+                            $temp_day_arr[$k][$t]['am'] = 1;
+                        }
+                    } else {
+                        if (in_array($teacher_arr[$t], $temp_course_table[$k][$vk])) {
+                            $temp_day_arr[$k][$t]['pm'] = 1;
+                        }
                     }
                 }
             }
         }
 
-        $res = [];
-        for ($i = 0; $i < count($temp); $i++)
+        for ($m = 0; $m < count($temp_course_table); $m++)
         {
-            for ($j = 0; $j < count($temp[$i]); $j++)
+            for ($n = 0; $n < count($temp_course_table[$m]); $n++)
             {
-                $res[$j][$i] = $temp[$i][$j];
+                for ($z = 0; $z < count($temp_day_arr[$m]); $z++)
+                {
+                    if ($temp_day_arr[$m][$z]['am'] === 0) {
+                        $temp_course_table[$m][$z]['teacher'] = $temp_day_arr[$m][$z]['teacher'];
+                        $temp_course_table[$m][$z]['course'] = $this->getCourseByTeacher($temp_day_arr[$m][$z]['teacher']);
+                    }
+
+                    if ($temp_day_arr[$m][$z]['pm'] === 0) {
+                        $temp_course_table[$m][$day_div + $z]['teacher'] = $temp_day_arr[$m][$z]['teacher'];
+                        $temp_course_table[$m][$day_div + $z]['course'] = $this->getCourseByTeacher($temp_day_arr[$m][$z]['teacher']);
+                    }
+                }
             }
         }
-        return $res;
+
+        // 转换为原来的数据格式
+        $result = [];
+        for ($i = 0; $i < count($temp_course_table); $i++)
+        {
+            for ($j = 0; $j < count($temp_course_table[$i]); $j++)
+            {
+                $result[$j][$i] = $temp_course_table[$i][$j];
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -559,42 +582,6 @@ class IndexController extends Controller
                 return $v['subj'];
             }
         }
-    }
-
-    /**
-     * 上午末节下午首节不能为同一个老师
-     * 递归运算
-     * @param type $result
-     * @param boolean $num
-     * @return type
-     * @version 1.0.0.1214
-     */
-    public function chkFirEnd($result = [])
-    {
-        if ($result[19]['course'] === $result[24]['course'] || $result[18]['course'] === $result[23]['course'] || $result[17]['course'] === $result[22]['course'] || $result[16]['course'] === $result[21]['course'] || $result[15]['course'] === $result[20]['course']) {
-            shuffle($result);
-            return $this->chkFirEnd($result);
-        } else {
-            return $result;
-        }
-    }
-
-    /**
-     * 判断课程表中某课程的节数
-     * @version 1.0.0.1213
-     */
-    public function getCourseTimes($course_name = '', $course_num = 0, $course_pool = [])
-    {
-        $temp_count = 0;
-        foreach ($course_pool as $k => $v)
-        {
-            if ($v['course'] === $course_name) {
-                $temp_count += 1;
-            }
-        }
-
-        // 返回多出或者缺少的数据条数
-        return ($temp_count > $course_num) ? ($temp_count - $course_num) : (($temp_count === $course_num) ? 0 : ($temp_count - $course_num));
     }
 
     /**

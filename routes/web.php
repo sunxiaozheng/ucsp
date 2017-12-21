@@ -29,4 +29,10 @@ Route::group(['namespace' => 'Home'], function() {
 
     // 禁止科目相邻
     Route::get('coursenotnextto', 'IndexController@courseNotNextTo');
+
+    // 教师当天的课分散排列
+    Route::get('coursediv', 'IndexController@courseDevide');
+
+    // 上午末节下午首节不能为同一个老师
+    Route::get('amnotnexttopm', 'IndexController@amNotNextToPm');
 });
