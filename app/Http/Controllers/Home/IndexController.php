@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 
 /**
  * 自动排课算法
- * @author Shawn Sun <pgshawnsun@gmail.com>
+ * @author Shawn Sun <pgshawn@qq.com>
  * @version 1.0.0.1213
  */
 class IndexController extends Controller
